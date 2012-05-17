@@ -44,5 +44,8 @@ class Rainbowth(sublime_plugin.EventListener):
         level -= 1
         parens[level].append(sublime.Region(i, i + 1))
 
+    for i in range(len(parens)):
+      view.erase_regions('rainbowth_%d' % i)
+
     for i, regions in enumerate([p for p in parens if p]):
       view.add_regions('rainbowth_%d' % i, regions, self.sources[i], self.style)
