@@ -1,5 +1,4 @@
 import sublime, sublime_plugin
-from random import randint
 
 class Rainbowth(sublime_plugin.EventListener):
   def __init__(self):
