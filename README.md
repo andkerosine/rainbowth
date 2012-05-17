@@ -12,7 +12,7 @@ It took about three hours for Racket to grow on me. I know with a fair amount of
 
 ### How does it work?
 
-Rainbowth is currently a bit limited in its ability to detect logical blocks of code. After each keyed parenthesis, it will look before and after the cursor until it finds two newlines on either side; these demarcate the section of code to be highlighted as a single entity. In short, this means that a blank line must be inserted between each procedure. This seems to be the community's preferred structure anyhow, but it's something to keep in mind in the event of strange results.
+Rainbowth is currently a bit limited in its ability to detect logical blocks of code. After each keyed parenthesis, it will look before and after the cursor until it finds two newlines on either side; these demarcate the section of code to be highlighted as a single entity. In short, this means that a blank line must be inserted between each block. This seems to be the community's preferred structure anyhow, but it's something to keep in mind in the event of strange results.
 
 ### Installation
 
