@@ -6,16 +6,21 @@ class Rainbowth(sublime_plugin.EventListener):
     self.style = settings.get('style') == 'outline' and 32 or 0
     self.sources = settings.get('sources')
 
-  def lispy(self):
+  def is_lispy(self):
     file_scope = self.view.scope_name(0)
     return file_scope.split('.')[1].split(' ')[0] in ['lisp', 'scheme']
 
   def on_modified(self, view):
-    self.view = view
-    if not self.lispy():
-      return
     key = view.substr(view.sel()[0].begin() - 1)
     if key not in '()':
+      return
+
+    try:
+      self.lispy
+    except AttributeError:
+      self.view = view
+      self.lispy = self.is_lispy()
+    if not self.lispy:
       return
 
     start, end = [view.sel()[0].begin()] * 2
