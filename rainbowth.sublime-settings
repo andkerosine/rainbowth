@@ -1,4 +1,0 @@
-{
-  "style": "outline",
-  "sources": ["variable", "constant.numeric", "support.type", "constant.other.symbol", "keyword.operator", "keyword"]
-}
