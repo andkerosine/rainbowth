@@ -19,7 +19,7 @@ Cloning the repository directly into your Packages directory is simplest.
 
 ### Configuration
 
-The `palette` setting is a mapping of theme names to the list of colors to use for painting parentheses while using that theme, outermost first. When using a theme not specified, the default ROYGBIV sequence will be used.
+The `palettes` setting is a mapping of theme names to the list of colors to use for painting parentheses while using that theme, outermost first. When using a theme not specified, the default ROYGBIV sequence will be used.
 
 ### Roadmap
 

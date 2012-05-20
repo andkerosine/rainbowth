@@ -12,8 +12,8 @@ class Rainbowth(sublime_plugin.EventListener):
       cache = {}
 
     settings = sublime.load_settings('Rainbowth.sublime-settings')
-    palette = settings.get('palette')
-    self.colors = palette.get(scheme_name, palette['default'])
+    palettes = settings.get('palettes')
+    self.colors = palettes.get(scheme_name, palettes['default'])
     if self.colors == cache.get(scheme_name, None):
       return
 
