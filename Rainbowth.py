@@ -1,31 +1,40 @@
-import sublime, sublime_plugin, re
+import sublime, sublime_plugin, re, pickle, os
 
 class Rainbowth(sublime_plugin.EventListener):
   def update_colors(self, view):
-    base_dir = sublime.packages_path()[:-8]
-    theme_path = base_dir + view.settings().get('color_scheme')
-    theme_name = theme_path.split('/')[-1].split('.')[0]
-    theme_file = open(theme_path, 'r')
-    theme = theme_file.read().decode('utf-8')
-    theme_file.close()
+    base_dir = sublime.packages_path()
+    scheme_path = base_dir[:-8] + view.settings().get('color_scheme')
+    scheme_name = scheme_path.split('/')[-1].split('.')[0]
+
+    try:
+      cache = pickle.load(open(base_dir + '/Rainbowth/Rainbowth.cache', 'r'))
+    except:
+      cache = {}
 
     settings = sublime.load_settings('Rainbowth.sublime-settings')
     palette = settings.get('palette')
-    self.colors = palette.get(theme_name, palette['default'])
+    self.colors = palette.get(scheme_name, palette['default'])
+    if self.colors == cache.get(scheme_name, None):
+      return
 
-    bg = re.search('background.+?g>(.+?)<', theme, re.DOTALL).group(1)
+    scheme_file = open(scheme_path, 'r')
+    scheme_xml = scheme_file.read().decode('utf-8')
+
+    bg = re.search('background.+?g>(.+?)<', scheme_xml, re.DOTALL).group(1)
     bg = '#%06x' % max(1, (int(bg[1:], 16) - 1))
-    fragment = '<dict><key>scope</key><string>rainbowth%d</string><key>settings</key><dict><key>background</key><string>%s</string><key>foreground</key><string>%s</string></dict></dict>'
-    theme = re.sub('\t+<!-- rainbowth -->.+\n', '', theme)
+    fragment = '<dict><key>scope</key><string>rainbowth%d</string><key>settings</key><dict><key>background</key><string>' + bg + '</string><key>foreground</key><string>%s</string></dict></dict>'
+    scheme_xml = re.sub('\t+<!-- rainbowth -->.+\n', '', scheme_xml)
 
     rainbowth = '\t<!-- rainbowth -->'
     for i, c in enumerate(self.colors):
-      rainbowth += fragment % (i, bg, c)
+      rainbowth += fragment % (i, c)
 
-    theme = re.sub('</array>', rainbowth + '<!-- pot of gold -->\n\t</array>', theme)
-    theme_file = open(theme_path, 'w')
-    theme_file.write(theme.encode('utf-8'))
-    theme_file.close()
+    scheme_xml = re.sub('</array>', rainbowth + '<!---->\n\t</array>', scheme_xml)
+    scheme_file = open(scheme_path, 'w')
+    scheme_file.write(scheme_xml.encode('utf-8'))
+    scheme_file.close()
+    cache[scheme_name] = self.colors
+    pickle.dump(cache, open(base_dir + '/Rainbowth/Rainbowth.cache', 'w'))
 
   def on_load(self, view):
     file_scope = view.scope_name(0)
@@ -42,18 +51,26 @@ class Rainbowth(sublime_plugin.EventListener):
     if key not in '()' and not load:
       return
 
-    level, parens = 0, [[] for x in range(16)]
-    for i in range(view.size()):
-      char = view.substr(i)
-      if char == '(':
-        parens[level].append(sublime.Region(i, i + 1))
-        level += 1
-      elif char == ')':
-        level -= 1
-        parens[level].append(sublime.Region(i, i + 1))
+    source = view.substr(sublime.Region(0, view.size()))
+    src_len = len(source)
+    try:
+      block_end = source.index('\n\n(', view.sel()[0].begin())
+    except ValueError:
+      block_end = src_len
+    try:
+      block_start = block_end - source[::-1][src_len - block_end:].index('(\n\n') - 1
+    except ValueError:
+      block_start = 0
 
-    for i in range(len(parens)):
+    parens = [(sublime.Region(i + block_start, i + block_start + 1), c)
+      for i, c in enumerate(source[block_start:block_end]) if c in '()']
+
+    level, depths = 0, [[sublime.Region(-1, 0)] for i in xrange(len(self.colors))]
+    for p in parens:
+      level += p[1] == ')' and -1 or 0
+      depths[level % len(self.colors)].append(p[0])
+      level += p[1] == '(' and 1 or 0
+
+    for i, regions in enumerate(depths):
       view.erase_regions('rainbowth%d' % i)
-
-    for i, regions in enumerate([p for p in parens if p]):
       view.add_regions('rainbowth%d' % i, regions, 'rainbowth%d' % i)
