@@ -3,9 +3,11 @@ import sublime, sublime_plugin, re
 class Rainbowth(sublime_plugin.EventListener):
   def update_colors(self, view):
     base_dir = sublime.packages_path()[:-8]
-    theme_file = base_dir + view.settings().get('color_scheme')
-    theme_name = theme_file.split('/')[-1].split('.')[0]
-    theme = open(theme_file, 'r').read().decode('utf-8')
+    theme_path = base_dir + view.settings().get('color_scheme')
+    theme_name = theme_path.split('/')[-1].split('.')[0]
+    theme_file = open(theme_path, 'r')
+    theme = theme_file.read().decode('utf-8')
+    theme_file.close()
 
     settings = sublime.load_settings('Rainbowth.sublime-settings')
     palette = settings.get('palette')
@@ -21,8 +23,8 @@ class Rainbowth(sublime_plugin.EventListener):
       rainbowth += fragment % (i, bg, c)
 
     theme = re.sub('</array>', rainbowth + '<!-- pot of gold -->\n\t</array>', theme)
-    theme_file = open(theme_file, 'w')
-    theme_file.write(theme)
+    theme_file = open(theme_path, 'w')
+    theme_file.write(theme.encode('utf-8'))
     theme_file.close()
 
   def on_load(self, view):
@@ -50,7 +52,7 @@ class Rainbowth(sublime_plugin.EventListener):
         level -= 1
         parens[level].append(sublime.Region(i, i + 1))
 
-    for i in range(len(self.colors)):
+    for i in range(len(parens)):
       view.erase_regions('rainbowth%d' % i)
 
     for i, regions in enumerate([p for p in parens if p]):
